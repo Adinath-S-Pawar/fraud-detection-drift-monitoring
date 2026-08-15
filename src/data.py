@@ -11,21 +11,22 @@ import joblib
 
 from src import config
 
-
 def load_variant(filename: str) -> pd.DataFrame:
+    """Load a BAF CSV from data/ by filename."""
     path = config.DATA_DIR / filename
     if not path.exists():
         raise FileNotFoundError(f"{path} not found.")
     return pd.read_csv(path)
 
 def get_feature_types(df: pd.DataFrame):
+    """Split feature columns into (numeric, categorical)"""
     features = [c for c in df.columns if c != config.TARGET_COL]
     numeric = [c for c in features if pd.api.types.is_numeric_dtype(df[c])]
     categorical = [c for c in features if c not in numeric]
     return numeric, categorical
 
-
 def build_preprocessor(df: pd.DataFrame) -> ColumnTransformer:
+    """Scale numeric columns, one-hot encode categorical columns."""
     numeric, categorical = get_feature_types(df)
     return ColumnTransformer(
         transformers=[
@@ -33,7 +34,6 @@ def build_preprocessor(df: pd.DataFrame) -> ColumnTransformer:
             ("cat", OneHotEncoder(handle_unknown="ignore"), categorical),
         ]
     )
-
 
 def load_and_split_base():
     """Load Base.csv, fit preprocessor on train split only, return train/val splits."""
