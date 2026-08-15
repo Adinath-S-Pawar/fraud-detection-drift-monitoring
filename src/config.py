@@ -29,12 +29,12 @@ TEST_SIZE = 0.2
 RANDOM_STATE = 42
 
 # ---- Model artifact names ----
-MODEL_PATH = MODEL_DIR / "xgb_fraud_model.json"
+MODEL_PATH = MODEL_DIR / "xgb_fraud_model.json" 
 PREPROCESSOR_PATH = MODEL_DIR / "preprocessor.joblib"
 FEATURE_NAMES_PATH = MODEL_DIR / "feature_names.json"
 SHAP_EXPLAINER_PATH = MODEL_DIR / "shap_explainer.joblib"
 METRICS_PATH = MODEL_DIR / "training_metrics.json"
 
 # ---- Optuna ----
-N_OPTUNA_TRIALS = 40
-OPTUNA_TIMEOUT_SECONDS = 1800
+N_OPTUNA_TRIALS = 3 # bump for final run — kept low during local dev on limited hardware
+OPTUNA_TIMEOUT_SECONDS = 600 #10min
