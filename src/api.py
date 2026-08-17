@@ -7,12 +7,12 @@ import json
 
 import joblib
 import pandas as pd
-import shap
 import xgboost as xgb
 from fastapi import FastAPI
 from pydantic import BaseModel, ConfigDict
 
 from src import config
+from src.data import handle_missing_sentinels
 
 app = FastAPI(title="Fraud Detection API")
 
@@ -25,6 +25,9 @@ explainer = joblib.load(config.SHAP_EXPLAINER_PATH)
 
 with open(config.FEATURE_NAMES_PATH) as f:
     feature_names = json.load(f)
+
+with open(config.MISSING_MEDIANS_PATH) as f:
+    missing_medians = json.load(f)
 
 
 class Transaction(BaseModel):
@@ -42,8 +45,9 @@ def health():
 def predict(transaction: Transaction):
     """Score a single transaction, return fraud probability + top SHAP contributors."""
     raw = pd.DataFrame([transaction.model_dump()])
-    transformed = preprocessor.transform(raw)
+    raw, _ = handle_missing_sentinels(raw, medians=missing_medians)
 
+    transformed = preprocessor.transform(raw)
     proba = model.predict_proba(transformed)[0][1]
 
     shap_values = explainer.shap_values(transformed)

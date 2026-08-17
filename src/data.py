@@ -25,6 +25,26 @@ def get_feature_types(df: pd.DataFrame):
     categorical = [c for c in features if c not in numeric]
     return numeric, categorical
 
+def handle_missing_sentinels(df: pd.DataFrame, medians: dict | None = None):
+    """Replace -1 sentinel (missing) with median of real values, add a 
+    binary was_missing flag per column. """
+    df = df.copy()
+    computed_medians = {}
+
+    for col in config.MISSING_INDICATOR_COLS:
+        df[f"{col}_was_missing"] = (df[col] == -1).astype(int)
+
+        if medians is None:
+            real_values = df.loc[df[col] != -1, col]
+            median = real_values.median()
+            computed_medians[col] = median
+        else:
+            median = medians[col]
+
+        df[col] = df[col].replace(-1, median)
+
+    return df, (medians if medians is not None else computed_medians)
+
 def build_preprocessor(df: pd.DataFrame) -> ColumnTransformer:
     """Scale numeric columns, one-hot encode categorical columns."""
     numeric, categorical = get_feature_types(df)
@@ -36,6 +56,35 @@ def build_preprocessor(df: pd.DataFrame) -> ColumnTransformer:
     )
 
 def load_and_split_base():
+    """Load Base.csv, split 80/20 stratified, fit preprocessor on train only, save artifacts for reuse by API and drift job."""
+    df = load_variant(config.BASE_VARIANT)
+    y = df[config.TARGET_COL]
+    X = df.drop(columns=[config.TARGET_COL])
+
+    X_train, X_val, y_train, y_val = train_test_split(
+        X, y,
+        test_size=config.TEST_SIZE,
+        random_state=config.RANDOM_STATE,
+        stratify=y,
+    )
+
+    X_train, medians = handle_missing_sentinels(X_train)
+    X_val, _ = handle_missing_sentinels(X_val, medians=medians)
+
+    with open(config.MISSING_MEDIANS_PATH, "w") as f:
+        json.dump(medians, f)
+
+    preprocessor = build_preprocessor(X_train)
+    X_train_t = preprocessor.fit_transform(X_train)
+    X_val_t = preprocessor.transform(X_val)
+
+    joblib.dump(preprocessor, config.PREPROCESSOR_PATH)
+
+    feature_names = preprocessor.get_feature_names_out().tolist()
+    with open(config.FEATURE_NAMES_PATH, "w") as f:
+        json.dump(feature_names, f)
+
+    return X_train_t, X_val_t, y_train, y_val, feature_names
     """Load Base.csv, fit preprocessor on train split only, return train/val splits."""
     df = load_variant(config.BASE_VARIANT)
     y = df[config.TARGET_COL]

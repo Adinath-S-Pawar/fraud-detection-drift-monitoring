@@ -9,6 +9,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 MODEL_DIR = PROJECT_ROOT / "models"
 
+# ---- Missing-value handling ----
+MISSING_INDICATOR_COLS = ["prev_address_months_count", "bank_months_count"]
+MISSING_MEDIANS_PATH = MODEL_DIR / "missing_medians.json"
+
 MODEL_DIR.mkdir(exist_ok=True)
 DATA_DIR.mkdir(exist_ok=True)
 
