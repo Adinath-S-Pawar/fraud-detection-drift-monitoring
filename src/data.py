@@ -85,26 +85,3 @@ def load_and_split_base():
         json.dump(feature_names, f)
 
     return X_train_t, X_val_t, y_train, y_val, feature_names
-    """Load Base.csv, fit preprocessor on train split only, return train/val splits."""
-    df = load_variant(config.BASE_VARIANT)
-    y = df[config.TARGET_COL]
-    X = df.drop(columns=[config.TARGET_COL])
-
-    X_train, X_val, y_train, y_val = train_test_split(
-        X, y,
-        test_size=config.TEST_SIZE,
-        random_state=config.RANDOM_STATE,
-        stratify=y,
-    )
-
-    preprocessor = build_preprocessor(X_train)
-    X_train_t = preprocessor.fit_transform(X_train)
-    X_val_t = preprocessor.transform(X_val)
-
-    joblib.dump(preprocessor, config.PREPROCESSOR_PATH)
-
-    feature_names = preprocessor.get_feature_names_out().tolist()
-    with open(config.FEATURE_NAMES_PATH, "w") as f:
-        json.dump(feature_names, f)
-
-    return X_train_t, X_val_t, y_train, y_val, feature_names

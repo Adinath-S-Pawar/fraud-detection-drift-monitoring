@@ -8,3 +8,5 @@ models/*.joblib
 notes/
 test_payload.json
 predictions.db
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
