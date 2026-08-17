@@ -7,3 +7,4 @@ shap>=0.44
 joblib>=1.3
 fastapi>=0.110
 uvicorn[standard]>=0.29
+jupyter>=1.0

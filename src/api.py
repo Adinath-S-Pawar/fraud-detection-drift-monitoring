@@ -13,8 +13,11 @@ from pydantic import BaseModel, ConfigDict
 
 from src import config
 from src.data import handle_missing_sentinels
+from src.logging_db import init_db, log_prediction
 
 app = FastAPI(title="Fraud Detection API")
+
+init_db()
 
 # ---- Load artifacts once at startup, not per-request ----
 model = xgb.XGBClassifier()
@@ -54,6 +57,12 @@ def predict(transaction: Transaction):
     contributions = dict(zip(feature_names, shap_values[0].tolist()))
     top_contributors = dict(
         sorted(contributions.items(), key=lambda x: abs(x[1]), reverse=True)[:5]
+    )
+    
+    log_prediction(
+        raw_input=transaction.model_dump(),
+        fraud_probability=float(proba),
+        top_shap_contributors=top_contributors,
     )
 
     return {

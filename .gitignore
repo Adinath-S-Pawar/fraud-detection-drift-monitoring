@@ -7,3 +7,4 @@ models/*.joblib
 .env
 notes/
 test_payload.json
+predictions.db
