@@ -1,7 +1,6 @@
 """
-Generate a data drift report comparing logged live traffic (current) against Base.csv (reference), using Evidently.
-
-Run: python -m src.drift_report
+Data drift detection: compares logged live traffic (current) against Base.csv (reference) using Evidently, 
+and exposes a structured summary for use by the scheduled job and alerting.
 """
 
 import json
@@ -17,8 +16,8 @@ from src.logging_db import DB_PATH
 
 
 def load_logged_predictions() -> pd.DataFrame:
-    """Pull raw_input from every logged prediction, reconstruct as a dataframe.Drops any columns not present 
-    in Base (e.g. Variant III/V's synthetic x1/x2 columns)."""
+    """Pull raw_input from every logged prediction, reconstruct as a dataframe.
+    Drops any columns not present in Base """
     conn = sqlite3.connect(DB_PATH)
     rows = conn.execute("SELECT raw_input FROM predictions").fetchall()
     conn.close()
@@ -27,30 +26,48 @@ def load_logged_predictions() -> pd.DataFrame:
     df = pd.DataFrame(records)
 
     reference_cols = load_variant(config.BASE_VARIANT).drop(columns=[config.TARGET_COL]).columns
-    df = df.reindex(columns=reference_cols)  
+    df = df.reindex(columns=reference_cols)
 
     return df
 
 
-def run_drift_report():
+def get_drift_summary(save_html: bool = True) -> dict:
+    """Run the drift report, return a structured summary"""
     reference = load_variant(config.BASE_VARIANT).drop(columns=[config.TARGET_COL])
     current = load_logged_predictions()
-
-    print(f"Reference (Base) shape: {reference.shape}")
-    print(f"Current (logged traffic) shape: {current.shape}")
 
     report = Report([DataDriftPreset()])
     my_eval = report.run(current, reference)
 
-    my_eval.save_html("drift_report.html")
-    print("Saved drift_report.html")
+    if save_html:
+        my_eval.save_html("drift_report.html")
 
-    #inspect the actual structure before parsing it
-    result_dict = my_eval.dict()
-    with open("drift_report_raw.json", "w") as f:
-        json.dump(result_dict, f, indent=2, default=str)
-    print("Saved drift_report_raw.json for inspection")
+    result = my_eval.dict()
+    metrics = result["metrics"]
+
+    dataset_summary = metrics[0]["value"]  # DriftedColumnsCount
+
+    drifted_columns = []
+    for m in metrics[1:]:
+        threshold = m["config"].get("threshold", 0.1)
+        if m["value"] > threshold:
+            # metric_name looks like: ValueDrift(column=X,method=Y,threshold=Z)
+            col_name = m["metric_name"].split("column=")[1].split(",")[0]
+            drifted_columns.append({
+                "column": col_name,
+                "score": m["value"],
+                "threshold": threshold,
+            })
+
+    return {
+        "n_reference_rows": len(reference),
+        "n_current_rows": len(current),
+        "drift_share": dataset_summary["share"],
+        "drifted_column_count": dataset_summary["count"],
+        "drifted_columns": drifted_columns,
+    }
 
 
 if __name__ == "__main__":
-    run_drift_report()
+    summary = get_drift_summary()
+    print(json.dumps(summary, indent=2))
