@@ -55,33 +55,34 @@ def build_preprocessor(df: pd.DataFrame) -> ColumnTransformer:
         ]
     )
 
-def load_and_split_base():
-    """Load Base.csv, split 80/20 stratified, fit preprocessor on train only, save artifacts for reuse by API and drift job."""
+def load_and_split_base(preprocessor_path=None, feature_names_path=None, missing_medians_path=None):
+    """Load Base.csv, split 80/20 stratified, fit preprocessor on train only, save artifacts."""
+    preprocessor_path = preprocessor_path or config.PREPROCESSOR_PATH
+    feature_names_path = feature_names_path or config.FEATURE_NAMES_PATH
+    missing_medians_path = missing_medians_path or config.MISSING_MEDIANS_PATH
+    
     df = load_variant(config.BASE_VARIANT)
     y = df[config.TARGET_COL]
     X = df.drop(columns=[config.TARGET_COL])
 
     X_train, X_val, y_train, y_val = train_test_split(
-        X, y,
-        test_size=config.TEST_SIZE,
-        random_state=config.RANDOM_STATE,
-        stratify=y,
+        X, y, test_size=config.TEST_SIZE, random_state=config.RANDOM_STATE, stratify=y,
     )
 
     X_train, medians = handle_missing_sentinels(X_train)
     X_val, _ = handle_missing_sentinels(X_val, medians=medians)
 
-    with open(config.MISSING_MEDIANS_PATH, "w") as f:
+    with open(missing_medians_path, "w") as f:
         json.dump(medians, f)
 
     preprocessor = build_preprocessor(X_train)
     X_train_t = preprocessor.fit_transform(X_train)
     X_val_t = preprocessor.transform(X_val)
 
-    joblib.dump(preprocessor, config.PREPROCESSOR_PATH)
+    joblib.dump(preprocessor, preprocessor_path)
 
     feature_names = preprocessor.get_feature_names_out().tolist()
-    with open(config.FEATURE_NAMES_PATH, "w") as f:
+    with open(feature_names_path, "w") as f:
         json.dump(feature_names, f)
 
     return X_train_t, X_val_t, y_train, y_val, feature_names

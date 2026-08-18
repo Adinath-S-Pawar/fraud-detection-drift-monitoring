@@ -42,3 +42,17 @@ METRICS_PATH = MODEL_DIR / "training_metrics.json"
 # ---- Optuna ----
 N_OPTUNA_TRIALS = 3 # bump for final run — kept low during local dev on limited hardware
 OPTUNA_TIMEOUT_SECONDS = 600 #10min
+
+# ---- Model versioning (for retrain trigger) ----
+def get_versioned_paths(version: str):
+    """Return artifact paths for a specific model version, e.g. 'v1', 'v2'."""
+    return {
+        "model": MODEL_DIR / f"xgb_fraud_model_{version}.json",
+        "preprocessor": MODEL_DIR / f"preprocessor_{version}.joblib",
+        "feature_names": MODEL_DIR / f"feature_names_{version}.json",
+        "shap_explainer": MODEL_DIR / f"shap_explainer_{version}.joblib",
+        "metrics": MODEL_DIR / f"training_metrics_{version}.json",
+        "missing_medians": MODEL_DIR / f"missing_medians_{version}.json",
+    }
+
+CURRENT_VERSION_FILE = MODEL_DIR / "current_version.txt"

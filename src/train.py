@@ -39,9 +39,14 @@ def objective(trial, X_train, y_train, X_val, y_val):
     return average_precision_score(y_val, preds)
 
 
-def train():
-    print("Loading and preprocessing Base variant...")
-    X_train, X_val, y_train, y_val, feature_names = load_and_split_base()
+def train(version: str = "v1"):
+    paths = config.get_versioned_paths(version)
+    print(f"Loading and preprocessing Base variant... (training {version})")
+    X_train, X_val, y_train, y_val, feature_names = load_and_split_base(
+        preprocessor_path=paths["preprocessor"],
+        feature_names_path=paths["feature_names"],
+        missing_medians_path=paths["missing_medians"],
+    )
     print(f"Train shape: {X_train.shape}, Val shape: {X_val.shape}")
 
     print(f"\nRunning Optuna tuning ({config.N_OPTUNA_TRIALS} trials)...")
@@ -76,17 +81,19 @@ def train():
         "best_optuna_params": study.best_params,
         "n_trials_run": len(study.trials),
     }
-    with open(config.METRICS_PATH, "w") as f:
+    with open(paths["metrics"], "w") as f:
         json.dump(metrics, f, indent=2)
 
-    final_model.save_model(config.MODEL_PATH)
-    print(f"Model saved to {config.MODEL_PATH}")
+    final_model.save_model(paths["model"])
+    print(f"Model saved to {paths["model"]}")
 
     print("Building SHAP TreeExplainer...")
     explainer = shap.TreeExplainer(final_model)
-    joblib.dump(explainer, config.SHAP_EXPLAINER_PATH)
-    print(f"SHAP explainer saved to {config.SHAP_EXPLAINER_PATH}")
+    joblib.dump(explainer, paths["shap_explainer"])
+    print(f"SHAP explainer saved to {paths["shap_explainer"]}")
 
 
 if __name__ == "__main__":
-    train()
+    import sys
+    version = sys.argv[1] if len(sys.argv) > 1 else "v1"
+    train(version)
