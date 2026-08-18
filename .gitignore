@@ -12,3 +12,4 @@ predictions.db
 **/.ipynb_checkpoints/
 drift_report.html
 drift_report_raw.json
+logs/
