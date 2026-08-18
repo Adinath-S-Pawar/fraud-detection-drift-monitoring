@@ -13,6 +13,7 @@ from evidently.presets import DataDriftPreset
 from src import config
 from src.data import load_variant
 from src.logging_db import DB_PATH
+from src.alerting import send_slack_alert
 
 
 def load_logged_predictions() -> pd.DataFrame:
@@ -71,3 +72,4 @@ def get_drift_summary(save_html: bool = True) -> dict:
 if __name__ == "__main__":
     summary = get_drift_summary()
     print(json.dumps(summary, indent=2))
+    send_slack_alert(summary)

@@ -10,3 +10,4 @@ uvicorn[standard]>=0.29
 jupyter>=1.0
 evidently==0.7.21
 requests>=2.31
+python-dotenv>=1.0
