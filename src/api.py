@@ -19,17 +19,23 @@ app = FastAPI(title="Fraud Detection API")
 
 init_db()
 
-# ---- Load artifacts once at startup, not per-request ----
+# ---- Load whichever version current_version.txt points to ----
+with open(config.CURRENT_VERSION_FILE) as f:
+    live_version = f.read().strip()
+
+paths = config.get_versioned_paths(live_version)
+print(f"Loading model version: {live_version}")
+
 model = xgb.XGBClassifier()
-model.load_model(config.MODEL_PATH)
+model.load_model(paths["model"])
 
-preprocessor = joblib.load(config.PREPROCESSOR_PATH)
-explainer = joblib.load(config.SHAP_EXPLAINER_PATH)
+preprocessor = joblib.load(paths["preprocessor"])
+explainer = joblib.load(paths["shap_explainer"])
 
-with open(config.FEATURE_NAMES_PATH) as f:
+with open(paths["feature_names"]) as f:
     feature_names = json.load(f)
 
-with open(config.MISSING_MEDIANS_PATH) as f:
+with open(paths["missing_medians"]) as f:
     missing_medians = json.load(f)
 
 

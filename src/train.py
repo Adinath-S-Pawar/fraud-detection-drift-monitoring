@@ -15,6 +15,8 @@ import joblib
 from src import config
 from src.data import load_and_split_base
 
+import re 
+
 def objective(trial, X_train, y_train, X_val, y_val):
     params = {
         "objective": "binary:logistic",
@@ -37,6 +39,27 @@ def objective(trial, X_train, y_train, X_val, y_val):
     model.fit(X_train, y_train, eval_set=[(X_val, y_val)], verbose=False)
     preds = model.predict_proba(X_val)[:, 1]
     return average_precision_score(y_val, preds)
+
+
+def cleanup_old_versions(keep_last: int = 3):
+    """Delete versioned model artifacts beyond the most recent `keep_last` versions."""
+    pattern = re.compile(r"xgb_fraud_model_v(\d+)\.json$")
+    versions_found = []
+
+    for f in config.MODEL_DIR.glob("xgb_fraud_model_v*.json"):
+        match = pattern.search(f.name)
+        if match:
+            versions_found.append(int(match.group(1)))
+
+    versions_found = sorted(set(versions_found), reverse=True)
+    to_delete = versions_found[keep_last:]
+
+    for v in to_delete:
+        paths = config.get_versioned_paths(f"v{v}")
+        for path in paths.values():
+            if path.exists():
+                path.unlink()
+        print(f"Removed old version v{v} artifacts")
 
 
 def train(version: str = "v1"):
@@ -91,6 +114,8 @@ def train(version: str = "v1"):
     explainer = shap.TreeExplainer(final_model)
     joblib.dump(explainer, paths["shap_explainer"])
     print(f"SHAP explainer saved to {paths["shap_explainer"]}")
+    
+    cleanup_old_versions(keep_last=3)
 
 
 if __name__ == "__main__":
