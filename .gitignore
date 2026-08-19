@@ -13,3 +13,4 @@ predictions.db
 drift_report.html
 drift_report_raw.json
 logs/
+drift_status_latest.json

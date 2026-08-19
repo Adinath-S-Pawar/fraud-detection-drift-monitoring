@@ -56,3 +56,6 @@ def get_versioned_paths(version: str):
     }
 
 CURRENT_VERSION_FILE = MODEL_DIR / "current_version.txt"
+
+# ---- Drift status cache (avoids recomputing on every dashboard read) ----
+DRIFT_STATUS_CACHE_PATH = MODEL_DIR.parent / "drift_status_latest.json"

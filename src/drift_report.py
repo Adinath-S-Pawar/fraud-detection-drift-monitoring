@@ -14,6 +14,7 @@ from src import config
 from src.data import load_variant
 from src.logging_db import DB_PATH
 from src.alerting import send_slack_alert
+from datetime import datetime, timezone
 
 
 def load_logged_predictions() -> pd.DataFrame:
@@ -33,7 +34,7 @@ def load_logged_predictions() -> pd.DataFrame:
 
 
 def get_drift_summary(save_html: bool = True) -> dict:
-    """Run the drift report, return a structured summary"""
+    """Run the drift report, return a structured summary."""
     reference = load_variant(config.BASE_VARIANT).drop(columns=[config.TARGET_COL])
     current = load_logged_predictions()
 
@@ -46,13 +47,12 @@ def get_drift_summary(save_html: bool = True) -> dict:
     result = my_eval.dict()
     metrics = result["metrics"]
 
-    dataset_summary = metrics[0]["value"]  # DriftedColumnsCount
+    dataset_summary = metrics[0]["value"]
 
     drifted_columns = []
     for m in metrics[1:]:
         threshold = m["config"].get("threshold", 0.1)
         if m["value"] > threshold:
-            # metric_name looks like: ValueDrift(column=X,method=Y,threshold=Z)
             col_name = m["metric_name"].split("column=")[1].split(",")[0]
             drifted_columns.append({
                 "column": col_name,
@@ -60,13 +60,19 @@ def get_drift_summary(save_html: bool = True) -> dict:
                 "threshold": threshold,
             })
 
-    return {
+    summary = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "n_reference_rows": len(reference),
         "n_current_rows": len(current),
         "drift_share": dataset_summary["share"],
         "drifted_column_count": dataset_summary["count"],
         "drifted_columns": drifted_columns,
     }
+
+    with open(config.DRIFT_STATUS_CACHE_PATH, "w") as f:
+        json.dump(summary, f, indent=2)
+
+    return summary
 
 
 if __name__ == "__main__":

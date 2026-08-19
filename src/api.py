@@ -13,7 +13,8 @@ from pydantic import BaseModel, ConfigDict
 
 from src import config
 from src.data import handle_missing_sentinels
-from src.logging_db import init_db, log_prediction
+from src.logging_db import init_db, log_prediction, get_predictions
+from src.drift_report import get_drift_summary
 
 app = FastAPI(title="Fraud Detection API")
 
@@ -76,7 +77,39 @@ def predict(transaction: Transaction):
         "top_shap_contributors": top_contributors,
     }
 
+@app.get("/predictions")
+def predictions(limit: int = 50, sort_by_risk: bool = False):
+    """Recent logged predictions, for the dashboard's live predictions table."""
+    return get_predictions(limit=limit, sort_by_risk=sort_by_risk)
 
+
+@app.get("/drift-status")
+def drift_status():
+    """Latest cached drift check result, for the dashboard's drift panel."""
+    if not config.DRIFT_STATUS_CACHE_PATH.exists():
+        return {"error": "No drift check has run yet."}
+
+    with open(config.DRIFT_STATUS_CACHE_PATH) as f:
+        return json.load(f)
+
+
+@app.get("/model-info")
+def model_info():
+    """Currently live model version and its training metrics."""
+    with open(config.CURRENT_VERSION_FILE) as f:
+        version = f.read().strip()
+
+    paths = config.get_versioned_paths(version)
+    with open(paths["metrics"]) as f:
+        metrics = json.load(f)
+
+    return {
+        "live_version": version,
+        "roc_auc": metrics["roc_auc"],
+        "pr_auc": metrics["pr_auc"],
+    }
+    
+    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("src.api:app", host="0.0.0.0", port=8000, reload=True)
