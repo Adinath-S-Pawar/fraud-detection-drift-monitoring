@@ -1,27 +1,37 @@
 import { useEffect, useState } from 'react'
+import { getModelInfo } from './api'
+import PredictionsTable from './components/PredictionsTable'
 
 function App() {
   const [modelInfo, setModelInfo] = useState(null)
-  const [error, setError] = useState(null)
 
   useEffect(() => {
-    fetch('http://localhost:8000/model-info')
-      .then((res) => res.json())
-      .then(setModelInfo)
-      .catch((err) => setError(err.message))
+    getModelInfo().then(setModelInfo)
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-8">
-      <h1 className="text-3xl font-bold mb-6">Fraud Drift Dashboard</h1>
-      {error && <p className="text-red-400">Error: {error}</p>}
-      {modelInfo && (
-        <div className="bg-gray-900 rounded-lg p-4 max-w-sm">
-          <p>Live version: <span className="font-mono">{modelInfo.live_version}</span></p>
-          <p>ROC-AUC: {modelInfo.roc_auc.toFixed(4)}</p>
-          <p>PR-AUC: {modelInfo.pr_auc.toFixed(4)}</p>
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+      <header className="border-b border-[var(--border)] px-8 py-5 flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-xl font-bold tracking-tight">Fraud Detection Console</h1>
+          <p className="text-[var(--muted)] text-sm mt-0.5">Real-time monitoring & drift oversight</p>
         </div>
-      )}
+        {modelInfo && (
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[var(--info)] animate-pulse" />
+              <span className="font-mono text-[var(--info)]">{modelInfo.live_version}</span>
+            </div>
+            <div className="text-[var(--muted)] font-mono text-xs">
+              PR-AUC {modelInfo.pr_auc.toFixed(3)}
+            </div>
+          </div>
+        )}
+      </header>
+
+      <main className="p-8 max-w-6xl mx-auto space-y-6">
+        <PredictionsTable />
+      </main>
     </div>
   )
 }
