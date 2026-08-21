@@ -24,6 +24,7 @@ export default function PredictionsTable({ onSelectRow, selectedId }) {
     <div className="bg-console-panel border border-console-border rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-console-border">
         <h2 className="font-display text-lg font-medium">Live Predictions</h2>
+          <p className="text-console-muted text-xs mt-0.5">Click a row to view its explanation</p>
         <div className="flex gap-1 bg-black/30 rounded-lg p-1">
           <button
             onClick={() => setSortByRisk(false)}
