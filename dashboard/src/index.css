@@ -1,20 +1,17 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
-:root {
-  --bg: #0B0E14;
-  --panel: #12161C;
-  --border: #1E2530;
-  --text: #E7E9EC;
-  --muted: #8A93A3;
-  --risk-mid: #F5A623;
-  --risk-high: #EF4444;
-  --info: #38BDF8;
+@theme {
+  --color-console-bg: #0A0D13;
+  --color-console-panel: #161B24;
+  --color-console-border: #262E3D;
+  --color-console-text: #E7E9EC;
+  --color-console-muted: #8A93A3;
+  --color-console-info: #38BDF8;
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
+  background: var(--color-console-bg);
+  color: var(--color-console-text);
   font-family: 'Inter', sans-serif;
 }
 

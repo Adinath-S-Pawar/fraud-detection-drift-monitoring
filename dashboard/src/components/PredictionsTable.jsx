@@ -20,19 +20,19 @@ export default function PredictionsTable() {
   }, [sortByRisk])
 
   return (
-    <div className="bg-[var(--panel)] border border-[var(--border)] rounded-xl overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+    <div className="bg-console-panel border border-console-border rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-console-border">
         <h2 className="font-display text-lg font-medium">Live Predictions</h2>
         <div className="flex gap-1 bg-black/30 rounded-lg p-1">
           <button
             onClick={() => setSortByRisk(false)}
-            className={`px-3 py-1 text-sm rounded-md transition ${!sortByRisk ? 'bg-[var(--info)]/15 text-[var(--info)]' : 'text-[var(--muted)] hover:text-white'}`}
+            className={`px-3 py-1 text-sm rounded-md transition ${!sortByRisk ? 'bg-console-info/15 text-console-info' : 'text-console-muted hover:text-white'}`}
           >
             Recent
           </button>
           <button
             onClick={() => setSortByRisk(true)}
-            className={`px-3 py-1 text-sm rounded-md transition ${sortByRisk ? 'bg-[var(--info)]/15 text-[var(--info)]' : 'text-[var(--muted)] hover:text-white'}`}
+            className={`px-3 py-1 text-sm rounded-md transition ${sortByRisk ? 'bg-console-info/15 text-console-info' : 'text-console-muted hover:text-white'}`}
           >
             Highest Risk
           </button>
@@ -42,7 +42,7 @@ export default function PredictionsTable() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-[var(--muted)] text-xs uppercase tracking-wide border-b border-[var(--border)]">
+            <tr className="text-left text-console-muted text-xs uppercase tracking-wide border-b border-console-border">
               <th className="px-5 py-3 font-medium">Time</th>
               <th className="px-5 py-3 font-medium">Probability</th>
               <th className="px-5 py-3 font-medium">Risk</th>
@@ -51,16 +51,16 @@ export default function PredictionsTable() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={4} className="px-5 py-8 text-center text-[var(--muted)]">Loading...</td></tr>
+              <tr><td colSpan={4} className="px-5 py-8 text-center text-console-muted">Loading...</td></tr>
             ) : predictions.length === 0 ? (
-              <tr><td colSpan={4} className="px-5 py-8 text-center text-[var(--muted)]">No predictions logged yet.</td></tr>
+              <tr><td colSpan={4} className="px-5 py-8 text-center text-console-muted">No predictions logged yet.</td></tr>
             ) : (
               predictions.map((p) => {
                 const risk = riskLevel(p.fraud_probability)
                 const topFeature = Object.entries(p.top_shap_contributors)[0]
                 return (
-                  <tr key={p.id} className="border-b border-[var(--border)]/60 hover:bg-white/[0.02] transition">
-                    <td className="px-5 py-3 font-mono text-[var(--muted)] text-xs">
+                  <tr key={p.id} className="border-b border-console-border/60 hover:bg-white/[0.02] transition">
+                    <td className="px-5 py-3 font-mono text-console-muted text-xs">
                       {new Date(p.timestamp).toLocaleString()}
                     </td>
                     <td className="px-5 py-3 font-mono">{(p.fraud_probability * 100).toFixed(2)}%</td>
@@ -69,7 +69,7 @@ export default function PredictionsTable() {
                         {risk.label}
                       </span>
                     </td>
-                    <td className="px-5 py-3 font-mono text-xs text-[var(--muted)]">
+                    <td className="px-5 py-3 font-mono text-xs text-console-muted">
                       {topFeature ? topFeature[0].replace(/^(num|cat)__/, '') : '—'}
                     </td>
                   </tr>

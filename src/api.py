@@ -16,7 +16,17 @@ from src.data import handle_missing_sentinels
 from src.logging_db import init_db, log_prediction, get_predictions
 from src.drift_report import get_drift_summary
 
+from fastapi.middleware.cors import CORSMiddleware
+
+
 app = FastAPI(title="Fraud Detection API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 init_db()
 
