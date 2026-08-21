@@ -7,7 +7,7 @@ function riskLevel(prob) {
   return { label: 'Normal', color: 'text-slate-400 bg-slate-400/10 border-slate-400/20' }
 }
 
-export default function PredictionsTable() {
+export default function PredictionsTable({ onSelectRow, selectedId }) {
   const [predictions, setPredictions] = useState([])
   const [sortByRisk, setSortByRisk] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -18,6 +18,7 @@ export default function PredictionsTable() {
       .then(setPredictions)
       .finally(() => setLoading(false))
   }, [sortByRisk])
+
 
   return (
     <div className="bg-console-panel border border-console-border rounded-xl overflow-hidden">
@@ -59,7 +60,12 @@ export default function PredictionsTable() {
                 const risk = riskLevel(p.fraud_probability)
                 const topFeature = Object.entries(p.top_shap_contributors)[0]
                 return (
-                  <tr key={p.id} className="border-b border-console-border/60 hover:bg-white/[0.02] transition">
+                  <tr
+                    key={p.id}
+                    onClick={() => onSelectRow(p)}
+                    className={`border-b border-console-border/60 hover:bg-white/[0.04] transition cursor-pointer ${selectedId === p.id ? 'bg-console-info/[0.06]' : ''
+                      }`}
+                  >
                     <td className="px-5 py-3 font-mono text-console-muted text-xs">
                       {new Date(p.timestamp).toLocaleString()}
                     </td>

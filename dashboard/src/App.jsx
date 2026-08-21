@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { getModelInfo } from './api'
 import PredictionsTable from './components/PredictionsTable'
 import DriftPanel from './components/DriftPanel'
+import ShapDetail from './components/ShapDetail'
 
 function App() {
   const [modelInfo, setModelInfo] = useState(null)
+  const [selectedPrediction, setSelectedPrediction] = useState(null)
 
   useEffect(() => {
     getModelInfo().then(setModelInfo)
@@ -30,16 +32,17 @@ function App() {
         )}
       </header>
 
-      <main className="p-8 max-w-6xl mx-auto space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <PredictionsTable />
-          </div>
-          <div>
-            <DriftPanel />
-          </div>
-        </div>
-      </main>
+    <main className="p-8 max-w-6xl mx-auto space-y-6">
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="lg:col-span-2 space-y-6">
+      <PredictionsTable onSelectRow={setSelectedPrediction} selectedId={selectedPrediction?.id} />
+      <ShapDetail prediction={selectedPrediction} />
+    </div>
+    <div>
+      <DriftPanel />
+    </div>
+  </div>
+</main>
     </div>
   )
 }
