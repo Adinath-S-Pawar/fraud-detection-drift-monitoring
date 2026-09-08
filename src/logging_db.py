@@ -75,14 +75,14 @@ def get_prediction_by_id(prediction_id: int):
         "top_shap_contributors": json.loads(row[4]) if row[4] else None,
     }
     
-def get_predictions(limit: int = 50, sort_by_risk: bool = False):
-    """Fetch recent predictions, optionally sorted by fraud_probability descending."""
+def get_predictions(limit: int = 50, sort_by_risk: bool = False, offset: int = 0):
+    """Fetch a page of predictions, optionally sorted by fraud_probability descending."""
     conn = sqlite3.connect(DB_PATH)
     order = "fraud_probability DESC" if sort_by_risk else "timestamp DESC"
     rows = conn.execute(
         f"SELECT id, timestamp, raw_input, fraud_probability, top_shap_contributors "
-        f"FROM predictions ORDER BY {order} LIMIT ?",
-        (limit,),
+        f"FROM predictions ORDER BY {order} LIMIT ? OFFSET ?",
+        (limit, offset),
     ).fetchall()
     conn.close()
 
@@ -96,3 +96,11 @@ def get_predictions(limit: int = 50, sort_by_risk: bool = False):
         }
         for r in rows
     ]
+
+
+def get_predictions_count():
+    """Total number of logged predictions, for pagination controls."""
+    conn = sqlite3.connect(DB_PATH)
+    count = conn.execute("SELECT COUNT(*) FROM predictions").fetchone()[0]
+    conn.close()
+    return count

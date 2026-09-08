@@ -5,8 +5,10 @@ export async function getModelInfo() {
   return res.json()
 }
 
-export async function getPredictions(sortByRisk = false, limit = 50) {
-  const res = await fetch(`${BASE_URL}/predictions?sort_by_risk=${sortByRisk}&limit=${limit}`)
+export async function getPredictions(sortByRisk = false, limit = 25, offset = 0) {
+  const res = await fetch(
+    `${BASE_URL}/predictions?sort_by_risk=${sortByRisk}&limit=${limit}&offset=${offset}`
+  )
   return res.json()
 }
 

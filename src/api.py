@@ -13,7 +13,7 @@ from pydantic import BaseModel, ConfigDict
 
 from src import config
 from src.data import handle_missing_sentinels
-from src.logging_db import init_db, log_prediction, get_predictions
+from src.logging_db import init_db, log_prediction, get_predictions,get_predictions_count
 from src.drift_report import get_drift_summary
 from src.logging_db import  save_shap_result, get_prediction_by_id
 
@@ -82,9 +82,12 @@ def predict(transaction: Transaction):
     }
 
 @app.get("/predictions")
-def predictions(limit: int = 50, sort_by_risk: bool = False):
-    """Recent logged predictions, for the dashboard's live predictions table."""
-    return get_predictions(limit=limit, sort_by_risk=sort_by_risk)
+def predictions(limit: int = 25, offset: int = 0, sort_by_risk: bool = False):
+    """A page of logged predictions, for the dashboard's live predictions table."""
+    return {
+        "results": get_predictions(limit=limit, sort_by_risk=sort_by_risk, offset=offset),
+        "total": get_predictions_count(),
+    }
 
 @app.get("/predictions/{prediction_id}/explain")
 def explain_prediction(prediction_id: int):

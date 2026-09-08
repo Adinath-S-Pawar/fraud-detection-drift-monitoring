@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getPredictions } from '../api'
 
+const PAGE_SIZE = 25
+
 function riskLevel(prob) {
   if (prob >= 0.5) return { label: 'High', color: 'text-red-400 bg-red-400/10 border-red-400/30' }
   if (prob >= 0.15) return { label: 'Elevated', color: 'text-amber-400 bg-amber-400/10 border-amber-400/30' }
@@ -9,31 +11,44 @@ function riskLevel(prob) {
 
 export default function PredictionsTable({ onSelectRow, selectedId }) {
   const [predictions, setPredictions] = useState([])
+  const [total, setTotal] = useState(0)
   const [sortByRisk, setSortByRisk] = useState(false)
+  const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
-    getPredictions(sortByRisk, 25)
-      .then(setPredictions)
+    getPredictions(sortByRisk, PAGE_SIZE, page * PAGE_SIZE)
+      .then((data) => {
+        setPredictions(data.results)
+        setTotal(data.total)
+      })
       .finally(() => setLoading(false))
-  }, [sortByRisk])
+  }, [sortByRisk, page])
 
+  const totalPages = Math.ceil(total / PAGE_SIZE)
+
+  const handleSort = (byRisk) => {
+    setSortByRisk(byRisk)
+    setPage(0) // reset to first page on sort change
+  }
 
   return (
     <div className="bg-console-panel border border-console-border rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-console-border">
-        <h2 className="font-display text-lg font-medium">Live Predictions</h2>
-        <p className="text-console-muted text-xs mt-0.5">Click a row to view its explanation</p>
+        <div>
+          <h2 className="font-display text-lg font-medium">Live Predictions</h2>
+          <p className="text-console-muted text-xs mt-0.5">Click a row to view its explanation</p>
+        </div>
         <div className="flex gap-1 bg-black/30 rounded-lg p-1">
           <button
-            onClick={() => setSortByRisk(false)}
+            onClick={() => handleSort(false)}
             className={`px-3 py-1 text-sm rounded-md transition ${!sortByRisk ? 'bg-console-info/15 text-console-info' : 'text-console-muted hover:text-white'}`}
           >
             Recent
           </button>
           <button
-            onClick={() => setSortByRisk(true)}
+            onClick={() => handleSort(true)}
             className={`px-3 py-1 text-sm rounded-md transition ${sortByRisk ? 'bg-console-info/15 text-console-info' : 'text-console-muted hover:text-white'}`}
           >
             Highest Risk
@@ -66,8 +81,9 @@ export default function PredictionsTable({ onSelectRow, selectedId }) {
                   <tr
                     key={p.id}
                     onClick={() => onSelectRow(p)}
-                    className={`border-b border-console-border/60 hover:bg-white/[0.04] transition cursor-pointer ${selectedId === p.id ? 'bg-console-info/[0.06]' : ''
-                      }`}
+                    className={`border-b border-console-border/60 hover:bg-white/[0.04] transition cursor-pointer ${
+                      selectedId === p.id ? 'bg-console-info/[0.06]' : ''
+                    }`}
                   >
                     <td className="px-5 py-3 font-mono text-console-muted text-xs">
                       {new Date(p.timestamp).toLocaleString()}
@@ -88,6 +104,30 @@ export default function PredictionsTable({ onSelectRow, selectedId }) {
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-5 py-3 border-t border-console-border text-xs">
+          <span className="text-console-muted">
+            Page {page + 1} of {totalPages} · {total} total records
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className="px-3 py-1 rounded-md border border-console-border text-console-muted hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+              className="px-3 py-1 rounded-md border border-console-border text-console-muted hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
