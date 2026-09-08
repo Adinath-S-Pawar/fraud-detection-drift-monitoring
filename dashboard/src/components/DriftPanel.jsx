@@ -16,12 +16,13 @@ export default function DriftPanel() {
   }, [])
 
   if (loading) {
-    return (
-      <div className="bg-console-panel border border-console-border rounded-xl p-5">
-        <p className="text-console-muted">Loading drift status...</p>
-      </div>
-    )
-  }
+  return (
+    <div className="bg-console-panel border border-console-border rounded-xl p-5 animate-pulse">
+      <div className="h-4 bg-console-border rounded w-24 mb-4"></div>
+      <div className="h-8 bg-console-border rounded w-16"></div>
+    </div>
+  )
+}
 
   if (drift?.error) {
     return (

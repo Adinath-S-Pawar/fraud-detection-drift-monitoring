@@ -21,7 +21,7 @@ export default function ShapDetail({ prediction, onClose }) {
       onClick={onClose}
     >
       <div
-        className="bg-console-panel border border-console-border rounded-xl overflow-hidden w-full max-w-lg"
+        className="bg-console-panel border border-console-border rounded-xl overflow-hidden w-full max-w-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-5 py-4 border-b border-console-border flex items-start justify-between">
@@ -45,12 +45,12 @@ export default function ShapDetail({ prediction, onClose }) {
               <CartesianGrid strokeDasharray="3 3" stroke="#262E3D" horizontal={false} />
               <XAxis type="number" tick={{ fill: '#8A93A3', fontSize: 11 }} axisLine={{ stroke: '#262E3D' }} />
               <YAxis
-                type="category"
-                dataKey="feature"
-                tick={{ fill: '#E7E9EC', fontSize: 11, fontFamily: 'JetBrains Mono' }}
-                width={150}
-                axisLine={{ stroke: '#262E3D' }}
-              />
+  type="category"
+  dataKey="feature"
+  tick={{ fill: '#E7E9EC', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+  width={190}
+  axisLine={{ stroke: '#262E3D' }}
+/>
               <Bar dataKey="value" radius={[0, 4, 4, 0]} shape={<ColoredBar />} />
             </BarChart>
           </ResponsiveContainer>
