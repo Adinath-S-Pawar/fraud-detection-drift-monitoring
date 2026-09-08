@@ -24,7 +24,7 @@ export default function PredictionsTable({ onSelectRow, selectedId }) {
     <div className="bg-console-panel border border-console-border rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-console-border">
         <h2 className="font-display text-lg font-medium">Live Predictions</h2>
-          <p className="text-console-muted text-xs mt-0.5">Click a row to view its explanation</p>
+        <p className="text-console-muted text-xs mt-0.5">Click a row to view its explanation</p>
         <div className="flex gap-1 bg-black/30 rounded-lg p-1">
           <button
             onClick={() => setSortByRisk(false)}
@@ -59,7 +59,9 @@ export default function PredictionsTable({ onSelectRow, selectedId }) {
             ) : (
               predictions.map((p) => {
                 const risk = riskLevel(p.fraud_probability)
-                const topFeature = Object.entries(p.top_shap_contributors)[0]
+                const topFeature = p.top_shap_contributors
+                  ? Object.entries(p.top_shap_contributors)[0]
+                  : null
                 return (
                   <tr
                     key={p.id}

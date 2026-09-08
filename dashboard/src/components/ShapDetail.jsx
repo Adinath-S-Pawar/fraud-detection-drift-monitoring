@@ -8,6 +8,16 @@ function ColoredBar(props) {
 export default function ShapDetail({ prediction, onClose }) {
   if (!prediction) return null
 
+  if (!prediction.top_shap_contributors) {
+    return (
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
+        <div className="bg-console-panel border border-console-border rounded-xl p-8" onClick={(e) => e.stopPropagation()}>
+          <p className="text-console-muted text-sm">Computing explanation...</p>
+        </div>
+      </div>
+    )
+  }
+
   const chartData = Object.entries(prediction.top_shap_contributors)
     .map(([feature, value]) => ({
       feature: feature.replace(/^(num|cat)__/, ''),
@@ -45,12 +55,12 @@ export default function ShapDetail({ prediction, onClose }) {
               <CartesianGrid strokeDasharray="3 3" stroke="#262E3D" horizontal={false} />
               <XAxis type="number" tick={{ fill: '#8A93A3', fontSize: 11 }} axisLine={{ stroke: '#262E3D' }} />
               <YAxis
-  type="category"
-  dataKey="feature"
-  tick={{ fill: '#E7E9EC', fontSize: 10, fontFamily: 'JetBrains Mono' }}
-  width={190}
-  axisLine={{ stroke: '#262E3D' }}
-/>
+                type="category"
+                dataKey="feature"
+                tick={{ fill: '#E7E9EC', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                width={190}
+                axisLine={{ stroke: '#262E3D' }}
+              />
               <Bar dataKey="value" radius={[0, 4, 4, 0]} shape={<ColoredBar />} />
             </BarChart>
           </ResponsiveContainer>

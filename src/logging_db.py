@@ -11,7 +11,6 @@ from src import config
 
 DB_PATH = config.MODEL_DIR.parent / "predictions.db"
 
-
 def init_db():
     """Create the predictions table if it doesn't exist yet."""
     conn = sqlite3.connect(DB_PATH)
@@ -21,27 +20,60 @@ def init_db():
             timestamp TEXT NOT NULL,
             raw_input TEXT NOT NULL,
             fraud_probability REAL NOT NULL,
-            top_shap_contributors TEXT NOT NULL
+            top_shap_contributors TEXT
         )
     """)
     conn.commit()
     conn.close()
 
 
-def log_prediction(raw_input: dict, fraud_probability: float, top_shap_contributors: dict):
-    """Insert one prediction record."""
+def log_prediction(raw_input: dict, fraud_probability: float):
+    """Insert one prediction record, without SHAP (computed later on demand)."""
     conn = sqlite3.connect(DB_PATH)
-    conn.execute(
-        "INSERT INTO predictions (timestamp, raw_input, fraud_probability, top_shap_contributors) VALUES (?, ?, ?, ?)",
+    cursor = conn.execute(
+        "INSERT INTO predictions (timestamp, raw_input, fraud_probability, top_shap_contributors) VALUES (?, ?, ?, NULL)",
         (
             datetime.now(timezone.utc).isoformat(),
             json.dumps(raw_input),
             fraud_probability,
-            json.dumps(top_shap_contributors),
         ),
     )
     conn.commit()
+    new_id = cursor.lastrowid
     conn.close()
+    return new_id
+
+
+def save_shap_result(prediction_id: int, top_shap_contributors: dict):
+    """Cache a computed SHAP result against its prediction, so repeat views don't recompute."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute(
+        "UPDATE predictions SET top_shap_contributors = ? WHERE id = ?",
+        (json.dumps(top_shap_contributors), prediction_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_prediction_by_id(prediction_id: int):
+    """Fetch one prediction's raw_input, probability, and cached SHAP (if any)."""
+    conn = sqlite3.connect(DB_PATH)
+    row = conn.execute(
+        "SELECT id, timestamp, raw_input, fraud_probability, top_shap_contributors FROM predictions WHERE id = ?",
+        (prediction_id,),
+    ).fetchone()
+    conn.close()
+
+    if not row:
+        return None
+
+    return {
+        "id": row[0],
+        "timestamp": row[1],
+        "raw_input": json.loads(row[2]),
+        "fraud_probability": row[3],
+        "top_shap_contributors": json.loads(row[4]) if row[4] else None,
+    }
     
 def get_predictions(limit: int = 50, sort_by_risk: bool = False):
     """Fetch recent predictions, optionally sorted by fraud_probability descending."""
@@ -60,7 +92,7 @@ def get_predictions(limit: int = 50, sort_by_risk: bool = False):
             "timestamp": r[1],
             "raw_input": json.loads(r[2]),
             "fraud_probability": r[3],
-            "top_shap_contributors": json.loads(r[4]),
+            "top_shap_contributors": json.loads(r[4]) if r[4] else None,
         }
         for r in rows
     ]

@@ -3,6 +3,7 @@ import { getModelInfo } from './api'
 import PredictionsTable from './components/PredictionsTable'
 import DriftPanel from './components/DriftPanel'
 import ShapDetail from './components/ShapDetail'
+import { explainPrediction } from './api'
 
 function App() {
   const [modelInfo, setModelInfo] = useState(null)
@@ -11,6 +12,14 @@ function App() {
   useEffect(() => {
     getModelInfo().then(setModelInfo)
   }, [])
+
+  const handleSelectRow = async (p) => {
+  setSelectedPrediction(p)
+  if (!p.top_shap_contributors) {
+    const explained = await explainPrediction(p.id)
+    setSelectedPrediction(explained)
+  }
+}
 
   return (
     <div className="min-h-screen bg-console-bg text-console-text">
@@ -35,8 +44,7 @@ function App() {
     <main className="p-8 max-w-6xl mx-auto space-y-6">
   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 item-start">
     <div className="lg:col-span-2">
-      <PredictionsTable onSelectRow={setSelectedPrediction} selectedId={selectedPrediction?.id} />
-    </div>
+<PredictionsTable onSelectRow={handleSelectRow} selectedId={selectedPrediction?.id} />    </div>
     <div>
       <DriftPanel />
     </div>

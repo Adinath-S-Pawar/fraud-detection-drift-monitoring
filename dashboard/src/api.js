@@ -9,3 +9,8 @@ export async function getPredictions(sortByRisk = false, limit = 50) {
   const res = await fetch(`${BASE_URL}/predictions?sort_by_risk=${sortByRisk}&limit=${limit}`)
   return res.json()
 }
+
+export async function explainPrediction(id) {
+  const res = await fetch(`${BASE_URL}/predictions/${id}/explain`)
+  return res.json()
+}

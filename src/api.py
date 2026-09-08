@@ -15,6 +15,7 @@ from src import config
 from src.data import handle_missing_sentinels
 from src.logging_db import init_db, log_prediction, get_predictions
 from src.drift_report import get_drift_summary
+from src.logging_db import  save_shap_result, get_prediction_by_id
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -63,28 +64,21 @@ def health():
 
 @app.post("/predict")
 def predict(transaction: Transaction):
-    """Score a single transaction, return fraud probability + top SHAP contributors."""
+    """Score a single transaction, return fraud probability. SHAP is computed on demand."""
     raw = pd.DataFrame([transaction.model_dump()])
     raw, _ = handle_missing_sentinels(raw, medians=missing_medians)
 
     transformed = preprocessor.transform(raw)
     proba = model.predict_proba(transformed)[0][1]
 
-    shap_values = explainer.shap_values(transformed)
-    contributions = dict(zip(feature_names, shap_values[0].tolist()))
-    top_contributors = dict(
-        sorted(contributions.items(), key=lambda x: abs(x[1]), reverse=True)[:5]
-    )
-    
-    log_prediction(
+    prediction_id = log_prediction(
         raw_input=transaction.model_dump(),
         fraud_probability=float(proba),
-        top_shap_contributors=top_contributors,
     )
 
     return {
+        "id": prediction_id,
         "fraud_probability": float(proba),
-        "top_shap_contributors": top_contributors,
     }
 
 @app.get("/predictions")
@@ -92,6 +86,30 @@ def predictions(limit: int = 50, sort_by_risk: bool = False):
     """Recent logged predictions, for the dashboard's live predictions table."""
     return get_predictions(limit=limit, sort_by_risk=sort_by_risk)
 
+@app.get("/predictions/{prediction_id}/explain")
+def explain_prediction(prediction_id: int):
+    """Compute (or return cached) SHAP explanation for one specific prediction."""
+    record = get_prediction_by_id(prediction_id)
+    if not record:
+        return {"error": "Prediction not found."}
+
+    if record["top_shap_contributors"] is not None:
+        return record  # already cached, no recomputation needed
+
+    raw = pd.DataFrame([record["raw_input"]])
+    raw, _ = handle_missing_sentinels(raw, medians=missing_medians)
+    raw = raw.reindex(columns=preprocessor.feature_names_in_, fill_value=0)  # guard against x1/x2 etc.
+    transformed = preprocessor.transform(raw)
+
+    shap_values = explainer.shap_values(transformed)
+    contributions = dict(zip(feature_names, shap_values[0].tolist()))
+    top_contributors = dict(
+        sorted(contributions.items(), key=lambda x: abs(x[1]), reverse=True)[:5]
+    )
+
+    save_shap_result(prediction_id, top_contributors)
+    record["top_shap_contributors"] = top_contributors
+    return record
 
 @app.get("/drift-status")
 def drift_status():
