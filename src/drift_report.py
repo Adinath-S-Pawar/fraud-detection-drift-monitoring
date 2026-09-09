@@ -32,7 +32,7 @@ def load_logged_predictions() -> pd.DataFrame:
 
     return df
 
-MIN_RELIABLE_SAMPLE_SIZE = 200
+MIN_RELIABLE_SAMPLE_SIZE = 500
 
 def get_drift_summary(save_html: bool = True) -> dict:
     """Run the drift report, return a structured summary."""
