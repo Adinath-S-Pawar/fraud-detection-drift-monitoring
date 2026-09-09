@@ -18,9 +18,7 @@ API_URL = "http://localhost:8000/predict"
 
 def send_traffic(filename: str, n_rows: int):
     df = load_variant(filename)
-    sample = df.drop(columns=[config.TARGET_COL]).sample(
-        n=min(n_rows, len(df)), random_state=config.RANDOM_STATE
-    )
+    sample = df.drop(columns=[config.TARGET_COL]).sample(n=min(n_rows, len(df)))
 
     sent, failed = 0, 0
     for _, row in sample.iterrows():
