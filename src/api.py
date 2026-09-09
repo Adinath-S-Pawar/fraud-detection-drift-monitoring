@@ -123,6 +123,11 @@ def drift_status():
     with open(config.DRIFT_STATUS_CACHE_PATH) as f:
         return json.load(f)
 
+@app.post("/drift-status/refresh")
+def refresh_drift_status():
+    """Manually trigger a fresh drift check (recomputes against current logged traffic)."""
+    summary = get_drift_summary(save_html=False)
+    return summary
 
 @app.get("/model-info")
 def model_info():

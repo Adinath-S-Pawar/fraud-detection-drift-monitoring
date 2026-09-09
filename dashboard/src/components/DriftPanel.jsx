@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { refreshDriftStatus } from '../api'
 
 async function getDriftStatus() {
   const res = await fetch('http://localhost:8000/drift-status')
@@ -9,7 +10,7 @@ export default function DriftPanel() {
   const [drift, setDrift] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     getDriftStatus()
@@ -17,6 +18,18 @@ export default function DriftPanel() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
+
+  const handleRefresh = async () => {
+  setRefreshing(true)
+  try {
+    const fresh = await refreshDriftStatus()
+    setDrift(fresh)
+  } catch (err) {
+    setError(err.message)
+  } finally {
+    setRefreshing(false)
+  }
+}
 
   if (error) {
     return (
@@ -52,6 +65,14 @@ export default function DriftPanel() {
     <div className="bg-console-panel border border-console-border rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-console-border">
         <h2 className="font-display text-lg font-medium">Drift Status</h2>
+        <div className="flex items-center gap-2">
+        <button
+      onClick={handleRefresh}
+      disabled={refreshing}
+      className="px-3 py-1 text-xs rounded-md border border-console-border text-console-muted hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition"
+    >
+      {refreshing ? 'Checking...' : 'Check Now'}
+    </button>
         <span className={`px-2 py-0.5 rounded-full text-xs border whitespace-nowrap ${
         !drift.reliable
           ? 'text-console-muted bg-console-muted/10 border-console-muted/30'
@@ -61,7 +82,7 @@ export default function DriftPanel() {
       }`}>
         {!drift.reliable ? 'Low Sample' : isHealthy ? 'Stable' : 'Attention'}
       </span>
-        
+        </div>
       </div>
 
       

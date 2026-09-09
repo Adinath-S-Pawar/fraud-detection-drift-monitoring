@@ -21,3 +21,9 @@ export async function getPredictions(sortByRisk = false, limit = 25, offset = 0)
 export async function explainPrediction(id) {
   return safeFetch(`${BASE_URL}/predictions/${id}/explain`)
 }
+
+export async function refreshDriftStatus() {
+  const res = await fetch(`${BASE_URL}/drift-status/refresh`, { method: 'POST' })
+  if (!res.ok) throw new Error('Failed to refresh drift status')
+  return res.json()
+}
