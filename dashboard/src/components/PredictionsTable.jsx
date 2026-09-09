@@ -9,22 +9,32 @@ function riskLevel(prob) {
   return { label: 'Normal', color: 'text-slate-400 bg-slate-400/10 border-slate-400/20' }
 }
 
-export default function PredictionsTable({ onSelectRow, selectedId }) {
+export default function PredictionsTable({ onSelectRow, selectedId ,explainedUpdate }) {
   const [predictions, setPredictions] = useState([])
   const [total, setTotal] = useState(0)
   const [sortByRisk, setSortByRisk] = useState(false)
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     setLoading(true)
+    setError(null)
     getPredictions(sortByRisk, PAGE_SIZE, page * PAGE_SIZE)
       .then((data) => {
         setPredictions(data.results)
         setTotal(data.total)
       })
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [sortByRisk, page])
+
+  useEffect(() => {
+    if (!explainedUpdate) return
+    setPredictions((prev) =>
+      prev.map((p) => (p.id === explainedUpdate.id ? explainedUpdate : p))
+    )
+  }, [explainedUpdate])
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
@@ -67,7 +77,9 @@ export default function PredictionsTable({ onSelectRow, selectedId }) {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {error ? (
+              <tr><td colSpan={4} className="px-5 py-8 text-center text-red-400">{error}</td></tr>
+            ) : loading ? (
               <tr><td colSpan={4} className="px-5 py-8 text-center text-console-muted">Loading...</td></tr>
             ) : predictions.length === 0 ? (
               <tr><td colSpan={4} className="px-5 py-8 text-center text-console-muted">No predictions logged yet.</td></tr>
@@ -81,9 +93,8 @@ export default function PredictionsTable({ onSelectRow, selectedId }) {
                   <tr
                     key={p.id}
                     onClick={() => onSelectRow(p)}
-                    className={`border-b border-console-border/60 hover:bg-white/[0.04] transition cursor-pointer ${
-                      selectedId === p.id ? 'bg-console-info/[0.06]' : ''
-                    }`}
+                    className={`border-b border-console-border/60 hover:bg-white/[0.04] transition cursor-pointer ${selectedId === p.id ? 'bg-console-info/[0.06]' : ''
+                      }`}
                   >
                     <td className="px-5 py-3 font-mono text-console-muted text-xs">
                       {new Date(p.timestamp).toLocaleString()}

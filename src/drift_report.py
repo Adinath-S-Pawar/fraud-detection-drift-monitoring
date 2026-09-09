@@ -32,6 +32,7 @@ def load_logged_predictions() -> pd.DataFrame:
 
     return df
 
+MIN_RELIABLE_SAMPLE_SIZE = 200
 
 def get_drift_summary(save_html: bool = True) -> dict:
     """Run the drift report, return a structured summary."""
@@ -67,13 +68,14 @@ def get_drift_summary(save_html: bool = True) -> dict:
         "drift_share": dataset_summary["share"],
         "drifted_column_count": dataset_summary["count"],
         "drifted_columns": drifted_columns,
+        "reliable": len(current) >= MIN_RELIABLE_SAMPLE_SIZE,
+        "min_reliable_sample_size": MIN_RELIABLE_SAMPLE_SIZE,
     }
 
     with open(config.DRIFT_STATUS_CACHE_PATH, "w") as f:
         json.dump(summary, f, indent=2)
 
     return summary
-
 
 if __name__ == "__main__":
     summary = get_drift_summary()

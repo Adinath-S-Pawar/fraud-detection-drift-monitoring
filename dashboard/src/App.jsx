@@ -8,18 +8,21 @@ import { explainPrediction } from './api'
 function App() {
   const [modelInfo, setModelInfo] = useState(null)
   const [selectedPrediction, setSelectedPrediction] = useState(null)
+  const [explainedUpdate, setExplainedUpdate] = useState(null)
+
 
   useEffect(() => {
     getModelInfo().then(setModelInfo)
   }, [])
 
   const handleSelectRow = async (p) => {
-  setSelectedPrediction(p)
-  if (!p.top_shap_contributors) {
-    const explained = await explainPrediction(p.id)
-    setSelectedPrediction(explained)
+    setSelectedPrediction(p)
+    if (!p.top_shap_contributors) {
+      const explained = await explainPrediction(p.id)
+      setSelectedPrediction(explained)
+      setExplainedUpdate(explained)
+    }
   }
-}
 
   return (
     <div className="min-h-screen bg-console-bg text-console-text">
@@ -41,16 +44,18 @@ function App() {
         )}
       </header>
 
-    <main className="p-8 max-w-6xl mx-auto space-y-6">
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 item-start">
-    <div className="lg:col-span-2">
-<PredictionsTable onSelectRow={handleSelectRow} selectedId={selectedPrediction?.id} />    </div>
-    <div>
-      <DriftPanel />
-    </div>
-  </div>
-</main>
-<ShapDetail prediction={selectedPrediction} onClose={() => setSelectedPrediction(null)} />
+      <main className="p-8 max-w-6xl mx-auto space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 item-start">
+          <div className="lg:col-span-2">
+            <PredictionsTable onSelectRow={handleSelectRow}
+              selectedId={selectedPrediction?.id}
+              explainedUpdate={explainedUpdate} />    </div>
+          <div>
+            <DriftPanel />
+          </div>
+        </div>
+      </main>
+      <ShapDetail prediction={selectedPrediction} onClose={() => setSelectedPrediction(null)} />
     </div>
   )
 }
