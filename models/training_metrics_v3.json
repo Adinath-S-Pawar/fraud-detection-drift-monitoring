@@ -1,0 +1,17 @@
+{
+  "roc_auc": 0.8987298098387866,
+  "pr_auc": 0.18055139670250894,
+  "best_optuna_params": {
+    "max_depth": 5,
+    "learning_rate": 0.029210639222432628,
+    "n_estimators": 496,
+    "subsample": 0.713420265915365,
+    "colsample_bytree": 0.8564128241212074,
+    "min_child_weight": 8,
+    "gamma": 0.9374135078058731,
+    "reg_alpha": 0.002958854280159032,
+    "reg_lambda": 1.015629612310987,
+    "scale_pos_weight": 14.962388818161063
+  },
+  "n_trials_run": 36
+}

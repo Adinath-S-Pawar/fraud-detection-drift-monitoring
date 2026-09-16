@@ -5,6 +5,12 @@ data/*.csv
 !data/Base_reference_sample.csv
 models/*.json
 models/*.joblib
+!models/xgb_fraud_model_v3.json
+!models/preprocessor_v3.joblib
+!models/feature_names_v3.json
+!models/shap_explainer_v3.joblib
+!models/missing_medians_v3.json
+!models/training_metrics_v3.json
 .env
 notes/
 test_payload.json
