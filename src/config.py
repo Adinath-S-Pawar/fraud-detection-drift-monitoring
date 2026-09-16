@@ -17,7 +17,10 @@ MODEL_DIR.mkdir(exist_ok=True)
 DATA_DIR.mkdir(exist_ok=True)
 
 # ---- Dataset variants ----
-BASE_VARIANT = "Base.csv"
+# Use the full Base.csv locally if present, otherwise fall back to the
+# smaller shipped reference sample (for deployment, where 1M rows isn't practical)
+_full_base_path = DATA_DIR / "Base.csv"
+BASE_VARIANT = "Base.csv" if _full_base_path.exists() else "Base_reference_sample.csv"
 DRIFT_VARIANTS = [
     "Variant I.csv",
     "Variant II.csv",
