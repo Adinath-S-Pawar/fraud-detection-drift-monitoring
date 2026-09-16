@@ -40,8 +40,8 @@ SHAP_EXPLAINER_PATH = MODEL_DIR / "shap_explainer.joblib"
 METRICS_PATH = MODEL_DIR / "training_metrics.json"
 
 # ---- Optuna ----
-N_OPTUNA_TRIALS = 3 # bump for final run — kept low during local dev on limited hardware
-OPTUNA_TIMEOUT_SECONDS = 600 #10min
+N_OPTUNA_TRIALS = 40 # bump for final run — kept low during local dev on limited hardware
+OPTUNA_TIMEOUT_SECONDS = 3600 
 
 # ---- Model versioning (for retrain trigger) ----
 def get_versioned_paths(version: str):
