@@ -38,6 +38,22 @@ def get_drift_summary(save_html: bool = True) -> dict:
     """Run the drift report, return a structured summary."""
     reference = load_variant(config.BASE_VARIANT).drop(columns=[config.TARGET_COL])
     current = load_logged_predictions()
+    
+    if len(current) == 0:
+        summary = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "n_reference_rows": len(reference),
+            "n_current_rows": 0,
+            "drift_share": None,
+            "drifted_column_count": 0,
+            "drifted_columns": [],
+            "reliable": False,
+            "min_reliable_sample_size": MIN_RELIABLE_SAMPLE_SIZE,
+            "error": "No predictions logged yet — send some traffic through /predict first.",
+        }
+        with open(config.DRIFT_STATUS_CACHE_PATH, "w") as f:
+            json.dump(summary, f, indent=2)
+        return summary
 
     report = Report([DataDriftPreset()])
     my_eval = report.run(current, reference)
