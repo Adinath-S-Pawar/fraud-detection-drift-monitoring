@@ -1,9 +1,12 @@
 """
-Send rows from a BAF variant through the running /predict endpoint, to
+Send rows from a BAF variant through a running /predict endpoint, to
 populate predictions.db with realistic "live traffic" for drift analysis.
 
-Run the API first (python -m src.api), then in a second terminal:
+Run against local API:
     python -m src.generate_traffic "Variant I.csv" 500
+
+Run against a deployed API:
+    python -m src.generate_traffic "Variant I.csv" 500 https://fraud-detection-drift-monitoring.onrender.com
 """
 
 import sys
@@ -12,11 +15,17 @@ import requests
 
 from src import config
 from src.data import load_variant
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-API_URL = "http://localhost:8000/predict"
+ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
+
+DEFAULT_API_URL = "http://localhost:8000"
 
 
-def send_traffic(filename: str, n_rows: int):
+def send_traffic(filename: str, n_rows: int, base_url: str = DEFAULT_API_URL):
+    predict_url = f"{base_url}/predict"
     df = load_variant(filename)
     sample = df.drop(columns=[config.TARGET_COL]).sample(n=min(n_rows, len(df)))
 
@@ -24,21 +33,23 @@ def send_traffic(filename: str, n_rows: int):
     for _, row in sample.iterrows():
         payload = row.to_dict()
         try:
-            resp = requests.post(API_URL, json=payload, timeout=5)
+            headers = {"X-API-Key": ADMIN_API_KEY}
+            resp = requests.post(predict_url, json=payload, headers=headers, timeout=15)
             resp.raise_for_status()
             sent += 1
         except requests.RequestException as e:
             failed += 1
-            if failed <= 3:  # avoiding flooding console
+            if failed <= 3:
                 print(f"Request failed: {e}")
 
-        if sent % 100 == 0 and sent > 0:
+        if sent % 20 == 0 and sent > 0:
             print(f"{sent}/{n_rows} sent...")
 
-    print(f"\nDone. Sent: {sent}, Failed: {failed}")
+    print(f"\nDone. Target: {base_url} | Sent: {sent}, Failed: {failed}")
 
 
 if __name__ == "__main__":
     filename = sys.argv[1] if len(sys.argv) > 1 else "Variant I.csv"
     n_rows = int(sys.argv[2]) if len(sys.argv) > 2 else 500
-    send_traffic(filename, n_rows)
+    base_url = sys.argv[3] if len(sys.argv) > 3 else DEFAULT_API_URL
+    send_traffic(filename, n_rows, base_url)

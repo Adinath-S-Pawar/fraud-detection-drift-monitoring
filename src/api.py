@@ -10,7 +10,7 @@ import pandas as pd
 import xgboost as xgb
 from fastapi import FastAPI
 from pydantic import BaseModel, ConfigDict
-
+from fastapi import FastAPI, Header, HTTPException, Depends
 from src import config
 from src.data import handle_missing_sentinels
 from src.logging_db import init_db, log_prediction, get_predictions,get_predictions_count
@@ -18,6 +18,10 @@ from src.drift_report import get_drift_summary
 from src.logging_db import  save_shap_result, get_prediction_by_id
 
 from fastapi.middleware.cors import CORSMiddleware
+import os
+from fastapi import Header, HTTPException
+
+ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
 
 
 app = FastAPI(title="Fraud Detection API")
@@ -31,6 +35,10 @@ app.add_middleware(
 
 init_db()
 
+def verify_admin_key(x_api_key: str = Header(None)):
+    if not ADMIN_API_KEY or x_api_key != ADMIN_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+    
 # ---- Load whichever version current_version.txt points to ----
 with open(config.CURRENT_VERSION_FILE) as f:
     live_version = f.read().strip()
@@ -63,7 +71,7 @@ def health():
 
 
 @app.post("/predict")
-def predict(transaction: Transaction):
+def predict(transaction: Transaction, _: None = Depends(verify_admin_key)):
     """Score a single transaction, return fraud probability. SHAP is computed on demand."""
     raw = pd.DataFrame([transaction.model_dump()])
     raw, _ = handle_missing_sentinels(raw, medians=missing_medians)
