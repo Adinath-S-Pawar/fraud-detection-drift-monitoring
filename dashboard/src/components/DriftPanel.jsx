@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react'
 import { refreshDriftStatus } from '../api'
+import { getDriftStatus } from '../api'
 
-async function getDriftStatus() {
-  const res = await fetch('http://localhost:8000/drift-status')
-  return res.json()
-}
 
 export default function DriftPanel() {
   const [drift, setDrift] = useState(null)

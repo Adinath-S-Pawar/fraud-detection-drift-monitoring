@@ -27,3 +27,7 @@ export async function refreshDriftStatus() {
   if (!res.ok) throw new Error('Failed to refresh drift status')
   return res.json()
 }
+
+export async function getDriftStatus() {
+  return safeFetch(`${BASE_URL}/drift-status`)
+}
