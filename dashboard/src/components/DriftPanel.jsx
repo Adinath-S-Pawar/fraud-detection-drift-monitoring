@@ -46,13 +46,24 @@ export default function DriftPanel() {
   }
 
   if (drift?.error) {
-    return (
-      <div className="bg-console-panel border border-console-border rounded-xl p-5">
-        <h2 className="font-display text-lg font-medium mb-2">Drift Status</h2>
+  return (
+    <div className="bg-console-panel border border-console-border rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-console-border">
+        <h2 className="font-display text-lg font-medium">Drift Status</h2>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="px-3 py-1 text-xs rounded-md border border-console-border text-console-muted hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition"
+        >
+          {refreshing ? 'Checking...' : 'Check Now'}
+        </button>
+      </div>
+      <div className="p-5">
         <p className="text-console-muted text-sm">{drift.error}</p>
       </div>
-    )
-  }
+    </div>
+  )
+}
 
   const sharePct = (drift.drift_share * 100).toFixed(1)
   const isHealthy = drift.drift_share < 0.1
