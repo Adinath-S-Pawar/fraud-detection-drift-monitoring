@@ -104,24 +104,17 @@ isn't present, with no behavior change locally.
 
 ## Known limitations
 
-- **Precision/recall trade-off.** The current model (tuned via 40 Optuna trials)
-- catches under half of actual fraud (~44% recall), and roughly 1 in 7 flagged
-- transactions are truly fraudulent (~15% precision) at a 0.5 threshold.
-- This reflects a real trade-off, not a bug: the Optuna search favored recall — catching more fraud — at the cost of more false alarms.
-- That's a common, often deliberate choice in fraud detection,
-- since missing real fraud (chargebacks, losses, regulatory exposure) usually costs more than a human reviewing a false alarm.
-- **Multiple-comparisons noise in drift detection.** Each of the 31 features is tested separately for drift, so with a small sample,
-- a few can look "drifted" just from random chance, not because anything really changed. Testing showed this settling down past
-- roughly 500 rows. A more rigorous fix would first measure how much drift shows up naturally with no real change
-- (by comparing Base against itself), and use that as the baseline instead of a fixed cutoff.
-- **Prediction history doesn't survive restarts on Render's free tier.** predictions.db uses SQLite on local disk,
-- which is wiped on every service restart.
-- **No full authentication.** `/predict` requires a static API key to
-  prevent casual abuse of the free-tier hosting; this is not equivalent to
-  per-user authentication.
-- **Drift checks run on demand, not on a recurring schedule.** This was a deliberate choice: the dashboard's
-- "Check Now" button triggers a check directly, rather than a background job running automatically.
-- 
+- **Precision/recall trade-off.**
+  The current model (tuned via 40 Optuna trials) catches under half of actual fraud (~44% recall), and roughly 1 in 7 flagged
+  transactions are truly fraudulent (~15% precision) at a 0.5 threshold. This reflects a real trade-off, not a bug: the Optuna search favored recall — catching more fraud — at the cost of more false alarms That's a common, often deliberate choice in fraud detection, since missing real fraud (chargebacks, losses, regulatory exposure) usually costs more than a human reviewing a false alarm.
+- **Multiple-comparisons noise in drift detection.**
+  Each of the 31 features is tested separately for drift, so with a small sample, a few can look "drifted" just from random chance, not because anything really changed. Testing showed this settling down past roughly 500 rows. A more rigorous fix would first measure how much drift shows up naturally with no real change (by comparing Base against itself), and use that as the baseline instead of a fixed cutoff.
+- **Prediction history doesn't survive restarts on Render's free tier.** predictions.db uses SQLite on local disk, which is wiped on every service restart.
+- **No full authentication.**
+  `/predict` requires a static API key to prevent casual abuse of the free-tier hosting; this is not equivalent to per-user authentication.
+- **Drift checks run on demand, not on a recurring schedule.**
+  This was a deliberate choice: the dashboard's "Check Now" button triggers a check directly, rather than a background job running automatically.
+  
 ## Project structure
 
 ```
