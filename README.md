@@ -64,6 +64,16 @@ traffic" produces real, measurable drift, not a synthetic stand-in for it.
 | Backend hosting | Render (free tier) | API |
 | Frontend hosting | Vercel | Dashboard |
 
+## Screenshots
+
+**Dashboard overview** — live predictions, drift status, and model version, all pulling from the deployed API in real time.
+
+![Dashboard overview](screenshots/dashboard-overview.png)
+
+**Prediction explanation** — click any prediction to see its SHAP breakdown, computed on demand.
+
+![SHAP explanation](screenshots/shap-explanation.png)
+
 ## Key design decisions
 
 **PR-AUC over ROC-AUC as the tuning objective.** With fraud at only ~1.1% of the data, 
