@@ -104,3 +104,10 @@ def get_predictions_count():
     count = conn.execute("SELECT COUNT(*) FROM predictions").fetchone()[0]
     conn.close()
     return count
+
+def is_empty():
+    """Check if the predictions table has any rows."""
+    conn = sqlite3.connect(DB_PATH)
+    count = conn.execute("SELECT COUNT(*) FROM predictions").fetchone()[0]
+    conn.close()
+    return count == 0

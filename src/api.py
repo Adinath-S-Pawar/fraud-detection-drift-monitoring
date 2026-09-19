@@ -12,10 +12,11 @@ from fastapi import FastAPI
 from pydantic import BaseModel, ConfigDict
 from fastapi import FastAPI, Header, HTTPException, Depends
 from src import config
-from src.data import handle_missing_sentinels
 from src.logging_db import init_db, log_prediction, get_predictions,get_predictions_count
 from src.drift_report import get_drift_summary
-from src.logging_db import  save_shap_result, get_prediction_by_id
+from src.logging_db import  save_shap_result, get_prediction_by_id,is_empty
+from src.data import handle_missing_sentinels,load_variant
+
 
 from fastapi.middleware.cors import CORSMiddleware
 import os
@@ -58,6 +59,29 @@ with open(paths["feature_names"]) as f:
 with open(paths["missing_medians"]) as f:
     missing_medians = json.load(f)
 
+def seed_demo_data():
+    """Populate predictions.db with sample traffic from a different variant 
+    than the reference."""
+    if not is_empty():
+        return
+
+    print("Database is empty — seeding demo traffic...")
+    seed_file = config.DATA_DIR / "Variant_I_seed_sample.csv"
+    df = pd.read_csv(seed_file)
+    sample = df.drop(columns=[config.TARGET_COL], errors="ignore").sample(n=min(500, len(df)))
+
+    for _, row in sample.iterrows():
+        raw = pd.DataFrame([row.to_dict()])
+        raw, _ = handle_missing_sentinels(raw, medians=missing_medians)
+        raw = raw.reindex(columns=preprocessor.feature_names_in_, fill_value=0)
+        transformed = preprocessor.transform(raw)
+        proba = model.predict_proba(transformed)[0][1]
+        log_prediction(raw_input=row.to_dict(), fraud_probability=float(proba))
+
+    print(f"Seeded {len(sample)} demo predictions from Variant I.")
+
+    
+seed_demo_data()
 
 class Transaction(BaseModel):
     """Raw transaction fields — accepts any extra fields, only known columns get used."""
@@ -153,7 +177,7 @@ def model_info():
         "pr_auc": metrics["pr_auc"],
     }
     
-    
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("src.api:app", host="0.0.0.0", port=8000, reload=True)
